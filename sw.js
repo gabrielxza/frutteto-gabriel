@@ -1,10 +1,10 @@
-const CACHE = "frutteto-v1";
+const CACHE = "frutteto-v2";
 const ASSETS = [
-    "./",
-    "./index.html",
-    "./manifest.json",
-    "./icon-192.png",
-    "./icon-512.png"
+    "/frutteto-gabriel/",
+    "/frutteto-gabriel/index.html",
+    "/frutteto-gabriel/manifest.json",
+    "/frutteto-gabriel/icon-192.png",
+    "/frutteto-gabriel/icon-512.png"
 ];
 
 self.addEventListener("install", e => {
