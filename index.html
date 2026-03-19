@@ -1,0 +1,1599 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Frutteto Gabriel</title>
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#2e7d32">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <style>
+        :root {
+            --green: #2e7d32; --green-l: #4caf50; --green-d: #1b5e20;
+            --amber: #e65100; --amber-l: #ff8f00;
+            --red: #c62828; --red-l: #ef5350;
+            --blue: #1565c0;
+            --purple: #6a1b9a;
+            --bg: #f1f8e9; --card: #fff;
+            --txt: #1a1a1a; --txt2: #666;
+            --border: #ddd;
+            --r: 14px;
+            --nav: 62px;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: var(--bg); color: var(--txt);
+            max-width: 600px; margin: 0 auto;
+            min-height: 100vh;
+        }
+
+        /* HEADER */
+        .hdr {
+            background: linear-gradient(135deg, var(--green-d), var(--green));
+            color: #fff; padding: 14px 18px 10px;
+            position: sticky; top: 0; z-index: 90;
+            display: flex; align-items: center; justify-content: space-between;
+            box-shadow: 0 2px 8px rgba(0,0,0,.25);
+        }
+        .hdr-title { font-size: 19px; font-weight: 800; letter-spacing: .3px; }
+        .hdr-sub { font-size: 11px; opacity: .75; margin-top: 1px; }
+        .hdr-btn {
+            background: rgba(255,255,255,.18); border: none; color: #fff;
+            width: 40px; height: 40px; border-radius: 50%; font-size: 20px;
+            cursor: pointer; display: flex; align-items: center; justify-content: center;
+        }
+
+        /* BOTTOM NAV */
+        .nav {
+            position: fixed; bottom: 0; left: 50%; transform: translateX(-50%);
+            width: 100%; max-width: 600px;
+            background: var(--card); border-top: 1px solid var(--border);
+            display: flex; z-index: 90;
+            box-shadow: 0 -2px 10px rgba(0,0,0,.1);
+        }
+        .nav-btn {
+            flex: 1; display: flex; flex-direction: column; align-items: center;
+            justify-content: center; padding: 7px 4px; cursor: pointer;
+            border: none; background: none; color: var(--txt2);
+            font-size: 10px; font-weight: 600; position: relative;
+            transition: color .15s;
+        }
+        .nav-btn.on { color: var(--green); }
+        .nav-btn .ico { font-size: 22px; margin-bottom: 2px; }
+        .nav-badge {
+            position: absolute; top: 4px; right: calc(50% - 18px);
+            background: var(--red); color: #fff;
+            font-size: 9px; font-weight: 800; width: 16px; height: 16px;
+            border-radius: 50%; display: flex; align-items: center; justify-content: center;
+        }
+
+        /* MAIN */
+        .main { padding: 14px; padding-bottom: calc(var(--nav) + 14px); }
+        .view { display: none; }
+        .view.on { display: block; }
+
+        /* SECTION HEADER */
+        .sec-hdr { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+        .sec-title { font-size: 18px; font-weight: 800; }
+        .btn-add {
+            background: var(--green); color: #fff; border: none;
+            padding: 8px 16px; border-radius: 20px; font-size: 13px; font-weight: 700;
+            cursor: pointer; display: flex; align-items: center; gap: 5px;
+        }
+
+        /* CARD */
+        .card {
+            background: var(--card); border-radius: var(--r);
+            padding: 16px; margin-bottom: 11px;
+            box-shadow: 0 2px 8px rgba(0,0,0,.09);
+            border: 1px solid var(--border);
+        }
+
+        /* CATEGORY CHIPS */
+        .chips { display: flex; gap: 7px; overflow-x: auto; padding-bottom: 8px; margin-bottom: 12px; scrollbar-width: none; }
+        .chips::-webkit-scrollbar { display: none; }
+        .chip {
+            flex-shrink: 0; padding: 5px 13px; border-radius: 18px;
+            font-size: 12px; font-weight: 700; border: 2px solid var(--border);
+            background: var(--card); cursor: pointer; color: var(--txt2); transition: all .15s;
+        }
+        .chip.on { border-color: var(--green); background: var(--green); color: #fff; }
+
+        /* PLANT CARD */
+        .pcard {
+            background: var(--card); border-radius: var(--r); padding: 13px 15px;
+            margin-bottom: 9px;
+            box-shadow: 0 2px 7px rgba(0,0,0,.08);
+            border-left: 4px solid var(--green);
+            display: flex; align-items: center; gap: 11px; cursor: pointer;
+        }
+        .pcard.drupacee { border-left-color: #e65100; }
+        .pcard.pomacee  { border-left-color: #c62828; }
+        .pcard.vigneto  { border-left-color: #6a1b9a; }
+        .pcard.orto     { border-left-color: #2e7d32; }
+        .pcard-ico { font-size: 34px; }
+        .pcard-info { flex: 1; min-width: 0; }
+        .pcard-cat { font-size: 10px; text-transform: uppercase; letter-spacing: .6px; color: var(--txt2); }
+        .pcard-name { font-size: 16px; font-weight: 800; }
+        .pcard-fase { font-size: 13px; color: var(--green); font-weight: 600; margin-top: 2px; }
+        .pcard-fase.alert { color: var(--amber); }
+        .pcard-note { font-size: 11px; color: var(--txt2); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .ico-btn { background: none; border: none; font-size: 18px; cursor: pointer; padding: 5px; border-radius: 8px; }
+
+        /* PUMP SELECTOR */
+        .pumps { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px; }
+        .pump {
+            background: var(--card); border: 2px solid var(--border);
+            border-radius: var(--r); padding: 14px; text-align: center; cursor: pointer;
+            transition: all .15s;
+        }
+        .pump.on { border-color: var(--green); background: #e8f5e9; }
+        .pump-ico { font-size: 30px; margin-bottom: 5px; }
+        .pump-name { font-size: 12px; font-weight: 700; }
+        .pump-L { font-size: 22px; font-weight: 900; color: var(--green); }
+        .pump-unit { font-size: 11px; color: var(--txt2); }
+
+        /* FORM */
+        .flabel { display: block; font-size: 12px; font-weight: 700; color: var(--txt2); text-transform: uppercase; letter-spacing: .5px; margin-bottom: 6px; }
+        .fgroup { margin-bottom: 13px; }
+        .finput, .fselect {
+            width: 100%; padding: 12px 13px; border: 2px solid var(--border);
+            border-radius: 10px; font-size: 15px; background: #fff; color: var(--txt);
+            appearance: none; -webkit-appearance: none;
+        }
+        .finput:focus, .fselect:focus { outline: none; border-color: var(--green); }
+        .sel-wrap { position: relative; }
+        .sel-wrap::after { content:'▼'; position: absolute; right: 13px; top: 50%; transform: translateY(-50%); font-size: 10px; color: var(--txt2); pointer-events: none; }
+        textarea.finput { resize: vertical; min-height: 75px; }
+
+        /* PLANT CHECKLIST */
+        .pchecks { display: flex; flex-direction: column; gap: 7px; max-height: 210px; overflow-y: auto; }
+        .pcheck {
+            display: flex; align-items: center; gap: 10px; padding: 10px 12px;
+            border-radius: 9px; background: var(--bg); cursor: pointer;
+        }
+        .pcheck input[type=checkbox] { width: 18px; height: 18px; accent-color: var(--green); }
+
+        /* PRODUCT ITEMS */
+        .prod-item {
+            background: var(--card); border-radius: 10px; padding: 12px 13px;
+            margin-bottom: 7px; border: 2px solid var(--border);
+            cursor: pointer; transition: all .15s; position: relative;
+        }
+        .prod-item.on { border-color: var(--green); background: #e8f5e9; }
+        .prod-item.blocked { opacity: .38; cursor: default; }
+        .prod-item.incompat { border-color: #ffb300; background: #fff8e1; }
+        .prod-item.suggest::before {
+            content: '⭐ CONSIGLIATO'; position: absolute; top: -9px; right: 10px;
+            background: var(--amber); color: #fff; font-size: 9px; font-weight: 800;
+            padding: 2px 8px; border-radius: 10px;
+        }
+        .prod-hdr { display: flex; justify-content: space-between; align-items: flex-start; }
+        .prod-name { font-size: 15px; font-weight: 800; }
+        .prod-sub { font-size: 11px; color: var(--txt2); }
+        .prod-dose { font-size: 17px; font-weight: 900; color: var(--green); text-align: right; }
+        .prod-dose-lbl { font-size: 10px; color: var(--txt2); text-align: right; }
+        .prod-note { font-size: 12px; color: var(--txt2); margin-top: 4px; }
+        .prod-timing { font-size: 11px; font-weight: 700; margin-top: 3px; }
+        .prod-timing.carenza { color: var(--amber); }
+        .prod-timing.interval { color: var(--green); }
+        .blocked-lbl { font-size: 11px; font-weight: 800; color: var(--red); margin-bottom: 3px; }
+        .incompat-lbl { font-size: 11px; font-weight: 800; color: var(--amber-l); margin-bottom: 3px; }
+
+        /* ALERT BANNERS */
+        .alert-box {
+            border-radius: var(--r); padding: 13px 15px; margin-bottom: 12px;
+            display: flex; align-items: flex-start; gap: 10px;
+        }
+        .alert-box.danger { background: linear-gradient(135deg, #b71c1c, var(--red-l)); color: #fff; }
+        .alert-box.warn   { background: linear-gradient(135deg, #e65100, #ff9800); color: #fff; }
+        .alert-box.info   { background: linear-gradient(135deg, var(--purple), #9c27b0); color: #fff; }
+        .alert-box.ok     { background: linear-gradient(135deg, var(--green-d), var(--green)); color: #fff; }
+        .alert-ico { font-size: 22px; flex-shrink: 0; }
+        .alert-txt { font-size: 13px; font-weight: 600; line-height: 1.45; }
+
+        /* DOSE SUMMARY */
+        .dose-sum {
+            background: linear-gradient(135deg, var(--green-d), var(--green));
+            color: #fff; border-radius: var(--r); padding: 15px; margin-bottom: 14px;
+        }
+        .dose-sum h3 { font-size: 13px; opacity: .8; margin-bottom: 10px; }
+        .dose-row { display: flex; justify-content: space-between; align-items: center; padding: 5px 0; border-bottom: 1px solid rgba(255,255,255,.2); }
+        .dose-row:last-child { border-bottom: none; }
+        .dose-prod { font-size: 14px; font-weight: 600; }
+        .dose-amt { font-size: 17px; font-weight: 900; background: rgba(255,255,255,.2); padding: 3px 9px; border-radius: 7px; }
+
+        /* BUTTONS */
+        .btn {
+            display: flex; align-items: center; justify-content: center; gap: 7px;
+            width: 100%; padding: 14px; border-radius: 12px;
+            font-size: 15px; font-weight: 800; border: none; cursor: pointer;
+            transition: opacity .15s;
+        }
+        .btn:active { opacity: .8; }
+        .btn:disabled { opacity: .45; cursor: default; }
+        .btn-green { background: var(--green); color: #fff; }
+        .btn-red   { background: var(--red); color: #fff; }
+        .btn-wa    { background: #25d366; color: #fff; }
+        .btn-out   { background: transparent; border: 2px solid var(--green); color: var(--green); }
+        .btn-sm    { padding: 8px 14px; font-size: 13px; border-radius: 9px; }
+
+        /* HISTORY */
+        .hist-item {
+            background: var(--card); border-radius: var(--r); padding: 13px 15px;
+            margin-bottom: 10px; box-shadow: 0 2px 7px rgba(0,0,0,.08);
+            border-left: 4px solid var(--green);
+        }
+        .hist-date { font-size: 12px; color: var(--txt2); margin-bottom: 5px; }
+        .hist-plants { font-size: 15px; font-weight: 800; margin-bottom: 7px; }
+        .tags { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 7px; }
+        .tag { background: #e8f5e9; color: var(--green); font-size: 12px; font-weight: 700; padding: 3px 10px; border-radius: 18px; }
+        .next-box {
+            background: #fff8e1; border: 1px solid #ffe082; border-radius: 8px;
+            padding: 8px 11px; font-size: 12px; color: #5d4037; margin-top: 6px;
+            display: flex; align-items: center; gap: 7px;
+        }
+        .hist-actions { display: flex; gap: 8px; margin-top: 9px; }
+        .hist-actions .btn { flex: 1; }
+
+        /* SCADENZE */
+        .stats3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 9px; margin-bottom: 14px; }
+        .stat { background: var(--card); border-radius: var(--r); padding: 12px; text-align: center; box-shadow: 0 2px 7px rgba(0,0,0,.08); }
+        .stat-n { font-size: 28px; font-weight: 900; color: var(--green); }
+        .stat-l { font-size: 10px; font-weight: 700; color: var(--txt2); text-transform: uppercase; }
+        .scad-card {
+            background: var(--card); border-radius: var(--r); padding: 13px 15px;
+            margin-bottom: 9px; box-shadow: 0 2px 7px rgba(0,0,0,.08);
+            display: flex; align-items: center; gap: 12px;
+        }
+        .scad-card.red   { border-left: 4px solid var(--red); }
+        .scad-card.amber { border-left: 4px solid var(--amber); }
+        .scad-card.ok    { border-left: 4px solid var(--green); }
+        .scad-giorni { font-size: 26px; font-weight: 900; min-width: 48px; text-align: center; }
+        .scad-card.red .scad-giorni   { color: var(--red); }
+        .scad-card.amber .scad-giorni { color: var(--amber); }
+        .scad-card.ok .scad-giorni    { color: var(--green); }
+        .scad-info { flex: 1; }
+        .scad-name { font-size: 14px; font-weight: 800; }
+        .scad-prod { font-size: 12px; color: var(--txt2); }
+        .scad-lbl  { font-size: 10px; font-weight: 700; text-transform: uppercase; color: var(--txt2); }
+
+        /* MODAL */
+        .overlay { position: fixed; inset: 0; background: rgba(0,0,0,.5); z-index: 200; display: flex; align-items: flex-end; justify-content: center; }
+        .overlay.hide { display: none; }
+        .modal {
+            background: var(--card); border-radius: 20px 20px 0 0;
+            width: 100%; max-width: 600px; max-height: 88vh; overflow-y: auto;
+            padding: 20px; animation: up .28s ease;
+        }
+        @keyframes up { from { transform: translateY(100%); } to { transform: translateY(0); } }
+        .modal-handle { width: 38px; height: 4px; background: var(--border); border-radius: 2px; margin: 0 auto 16px; }
+        .modal-title { font-size: 20px; font-weight: 900; margin-bottom: 16px; }
+
+        /* TOAST */
+        .toasts { position: fixed; top: 76px; left: 50%; transform: translateX(-50%); z-index: 300; width: calc(100% - 28px); max-width: 572px; }
+        .toast {
+            background: #333; color: #fff; padding: 11px 15px; border-radius: 10px;
+            margin-bottom: 7px; font-size: 13px; font-weight: 600;
+            display: flex; align-items: center; gap: 9px;
+            animation: tin .25s ease; box-shadow: 0 4px 14px rgba(0,0,0,.3);
+        }
+        @keyframes tin { from { opacity: 0; transform: translateY(-16px); } to { opacity: 1; transform: translateY(0); } }
+        .toast.ok  { background: var(--green); }
+        .toast.err { background: var(--red); }
+        .toast.wrn { background: var(--amber); }
+
+        /* EMPTY */
+        .empty { text-align: center; padding: 40px 20px; color: var(--txt2); }
+        .empty-ico { font-size: 60px; margin-bottom: 12px; }
+        .empty-t { font-size: 16px; font-weight: 700; }
+        .empty-s { font-size: 13px; margin-top: 5px; }
+
+        /* UTIL */
+        hr { border: none; border-top: 1px solid var(--border); margin: 14px 0; }
+        .row2 { display: flex; gap: 10px; }
+        .row2 .btn { flex: 1; }
+
+        /* SYNC */
+        .sync-row { display: flex; gap: 10px; margin-bottom: 14px; }
+        .sync-row .btn { flex: 1; }
+        .sync-status {
+            padding: 10px 13px; border-radius: 9px; font-size: 13px; font-weight: 600;
+            margin-bottom: 12px; display: flex; align-items: center; gap: 8px;
+        }
+        .sync-status.ok  { background: #e8f5e9; color: var(--green); }
+        .sync-status.err { background: #ffebee; color: var(--red); }
+        .sync-status.off { background: #f5f5f5; color: var(--txt2); }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .spinning { display: inline-block; animation: spin .8s linear infinite; }
+
+        /* DASHBOARD */
+        .dash-ok {
+            background: linear-gradient(135deg, var(--green-d), var(--green));
+            color: #fff; border-radius: var(--r); padding: 14px 16px;
+            margin-bottom: 12px; display: flex; align-items: center; gap: 12px;
+        }
+        .dash-ok-ico { font-size: 32px; }
+        .dash-ok-t { font-size: 15px; font-weight: 800; }
+        .dash-ok-s { font-size: 12px; opacity: .85; margin-top: 2px; }
+
+        .dash-urgent {
+            border-radius: var(--r); padding: 13px 15px; margin-bottom: 9px;
+            display: flex; align-items: center; gap: 12px; cursor: pointer;
+        }
+        .dash-urgent.red   { background: #ffebee; border-left: 4px solid var(--red); }
+        .dash-urgent.amber { background: #fff8e1; border-left: 4px solid var(--amber); }
+        .dash-urgent-ico { font-size: 28px; }
+        .dash-urgent-t { font-size: 14px; font-weight: 800; }
+        .dash-urgent-s { font-size: 12px; color: var(--txt2); margin-top: 2px; }
+        .dash-urgent-days { font-size: 22px; font-weight: 900; min-width: 44px; text-align: center; }
+        .dash-urgent.red   .dash-urgent-days { color: var(--red); }
+        .dash-urgent.amber .dash-urgent-days { color: var(--amber); }
+        .dash-section-title { font-size: 12px; font-weight: 800; text-transform: uppercase;
+            letter-spacing: .6px; color: var(--txt2); margin: 14px 0 8px; }
+
+        /* SUGGERITI BUTTON */
+        .btn-suggest {
+            background: linear-gradient(135deg, #e65100, #ff9800);
+            color: #fff; border: none; border-radius: var(--r);
+            padding: 13px 16px; width: 100%; font-size: 14px; font-weight: 800;
+            cursor: pointer; display: flex; align-items: center; justify-content: center;
+            gap: 8px; margin-bottom: 14px;
+        }
+
+        /* CALENDARIO */
+        .cal-header {
+            display: flex; align-items: center; justify-content: space-between;
+            margin-bottom: 12px;
+        }
+        .cal-title { font-size: 17px; font-weight: 800; }
+        .cal-nav { background: none; border: 1px solid var(--border); border-radius: 8px;
+            padding: 5px 12px; cursor: pointer; font-size: 14px; }
+        .cal-grid {
+            display: grid; grid-template-columns: repeat(7, 1fr);
+            gap: 3px; margin-bottom: 14px;
+        }
+        .cal-day-hdr { text-align: center; font-size: 11px; font-weight: 700;
+            color: var(--txt2); padding: 4px 0; }
+        .cal-day {
+            text-align: center; padding: 6px 2px; border-radius: 8px;
+            font-size: 13px; position: relative; min-height: 36px;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+        }
+        .cal-day.today { background: var(--green); color: #fff; font-weight: 800; }
+        .cal-day.other-month { color: #ccc; }
+        .cal-dots { display: flex; gap: 2px; justify-content: center; margin-top: 2px; }
+        .cal-dot { width: 5px; height: 5px; border-radius: 50%; }
+        .cal-dot.green  { background: var(--green); }
+        .cal-dot.orange { background: var(--amber); }
+        .cal-dot.red    { background: var(--red); }
+        .cal-legend { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 12px; }
+        .cal-leg-item { display: flex; align-items: center; gap: 5px; font-size: 12px; color: var(--txt2); }
+    </style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header class="hdr">
+    <div>
+        <div class="hdr-title">🌿 Frutteto Gabriel</div>
+        <div class="hdr-sub">Gestione Agronomica</div>
+    </div>
+    <div style="display:flex;gap:8px">
+        <button class="hdr-btn" id="syncBtn" onclick="manualSync()" title="Sincronizza GitHub">☁️</button>
+        <button class="hdr-btn" onclick="openSettings()" title="Impostazioni">⚙️</button>
+    </div>
+</header>
+
+<!-- TOASTS -->
+<div class="toasts" id="toasts"></div>
+
+<!-- MAIN -->
+<main class="main">
+
+    <!-- ═══ PIANTE ═══ -->
+    <div id="v-piante" class="view on">
+        <div id="dashboard"></div>
+        <div class="sec-hdr">
+            <span class="sec-title">Le Mie Piante</span>
+            <button class="btn-add" onclick="openAdd()">+ Aggiungi</button>
+        </div>
+        <div class="chips" id="catChips">
+            <div class="chip on" onclick="filterCat('all',this)">Tutte</div>
+            <div class="chip" onclick="filterCat('drupacee',this)">🍑 Drupacee</div>
+            <div class="chip" onclick="filterCat('pomacee',this)">🍎 Pomacee</div>
+            <div class="chip" onclick="filterCat('vigneto',this)">🍇 Vigneto</div>
+            <div class="chip" onclick="filterCat('orto',this)">🥬 Orto</div>
+        </div>
+        <div id="plantList"></div>
+    </div>
+
+    <!-- ═══ PREPARA ═══ -->
+    <div id="v-prepara" class="view">
+        <div class="sec-title" style="margin-bottom:14px">💊 Prepara Trattamento</div>
+        <button class="btn-suggest" onclick="loadSuggeriti()">⚡ Carica Trattamenti Suggeriti</button>
+
+        <div class="card">
+            <label class="flabel">1 — Pompa</label>
+            <div class="pumps">
+                <div class="pump on" id="pmp-grande" onclick="selPump('grande')">
+                    <div class="pump-ico">🪣</div>
+                    <div class="pump-name">Pompa Grande</div>
+                    <div class="pump-L">15</div>
+                    <div class="pump-unit">Litri</div>
+                </div>
+                <div class="pump" id="pmp-piccola" onclick="selPump('piccola')">
+                    <div class="pump-ico">🫙</div>
+                    <div class="pump-name">Pompa Piccola</div>
+                    <div class="pump-L">2</div>
+                    <div class="pump-unit">Litri</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <label class="flabel">2 — Piante da Trattare</label>
+            <div class="pchecks" id="pChecks"></div>
+        </div>
+
+        <div id="faseAlert"></div>
+
+        <div class="card">
+            <label class="flabel">3 — Prodotti</label>
+            <div id="prodList"></div>
+        </div>
+
+        <div id="doseSummary"></div>
+
+        <div class="card">
+            <div class="fgroup">
+                <label class="flabel">Data Trattamento</label>
+                <input type="date" class="finput" id="txDate">
+            </div>
+            <div class="fgroup" style="margin-bottom:0">
+                <label class="flabel">Note</label>
+                <textarea class="finput" id="txNote" placeholder="Condizioni meteo, osservazioni…"></textarea>
+            </div>
+        </div>
+
+        <button class="btn btn-green" onclick="doSave()" id="btnSave">✅ Registra Trattamento</button>
+    </div>
+
+    <!-- ═══ STORICO ═══ -->
+    <div id="v-storico" class="view">
+        <div class="sec-hdr">
+            <span class="sec-title">📋 Storico</span>
+            <span id="stCount" style="color:var(--txt2);font-size:13px"></span>
+        </div>
+        <div id="histList"></div>
+    </div>
+
+    <!-- ═══ SCADENZE ═══ -->
+    <div id="v-scad" class="view">
+        <div class="sec-title" style="margin-bottom:14px">🔔 Scadenze & Avvisi</div>
+        <div class="stats3" id="scStats"></div>
+        <!-- CALENDARIO -->
+        <div class="card">
+            <div class="cal-header">
+                <button class="cal-nav" onclick="calPrev()">&#8249;</button>
+                <span class="cal-title" id="calTitle"></span>
+                <button class="cal-nav" onclick="calNext()">&#8250;</button>
+            </div>
+            <div class="cal-legend">
+                <div class="cal-leg-item"><div class="cal-dot green"></div> Trattato</div>
+                <div class="cal-leg-item"><div class="cal-dot orange"></div> Scadenza futura</div>
+                <div class="cal-leg-item"><div class="cal-dot red"></div> Scaduto</div>
+            </div>
+            <div class="cal-grid" id="calGrid"></div>
+        </div>
+        <div id="scList"></div>
+    </div>
+
+</main>
+
+<!-- BOTTOM NAV -->
+<nav class="nav">
+    <button class="nav-btn on" onclick="goTo('piante',this)">
+        <span class="ico">🌿</span>Piante
+    </button>
+    <button class="nav-btn" onclick="goTo('prepara',this)">
+        <span class="ico">💊</span>Prepara
+    </button>
+    <button class="nav-btn" onclick="goTo('storico',this)">
+        <span class="ico">📋</span>Storico
+    </button>
+    <button class="nav-btn" onclick="goTo('scad',this)" id="navScad">
+        <span class="ico">🔔</span>Scadenze
+    </button>
+</nav>
+
+<!-- MODAL: SETTINGS / SYNC -->
+<div class="overlay hide" id="mSettings">
+    <div class="modal">
+        <div class="modal-handle"></div>
+        <div class="modal-title">⚙️ Impostazioni & Sync</div>
+
+        <div id="syncStatusBar"></div>
+
+        <div style="background:#e3f2fd;border-radius:10px;padding:12px 14px;margin-bottom:16px;font-size:13px;color:#1565c0">
+            <strong>Come configurare:</strong><br>
+            1. Vai su <strong>github.com → Settings → Developer settings → Personal access tokens → Tokens (classic)</strong><br>
+            2. Genera un token con permesso <strong>gist</strong><br>
+            3. Incollalo qui sotto e premi "Crea Gist"
+        </div>
+
+        <div class="fgroup">
+            <label class="flabel">GitHub Personal Access Token</label>
+            <input class="finput" id="sToken" type="password" placeholder="ghp_xxxxxxxxxxxx">
+        </div>
+        <div class="fgroup">
+            <label class="flabel">Gist ID (si compila automaticamente)</label>
+            <input class="finput" id="sGistId" type="text" placeholder="Lascia vuoto per crearne uno nuovo">
+        </div>
+
+        <div class="sync-row">
+            <button class="btn btn-green" onclick="saveGistConfig()">💾 Salva Config</button>
+            <button class="btn" style="background:#24292e;color:#fff" onclick="createGist()">✨ Crea Gist</button>
+        </div>
+        <div class="sync-row">
+            <button class="btn" style="background:#0969da;color:#fff" onclick="pushToGist()">⬆️ Carica su GitHub</button>
+            <button class="btn btn-out" onclick="pullFromGist()">⬇️ Scarica da GitHub</button>
+        </div>
+        <hr>
+        <button class="btn btn-out" onclick="closeModal('mSettings')">Chiudi</button>
+    </div>
+</div>
+
+<!-- MODAL: PIANTA -->
+<div class="overlay hide" id="mPlant">
+    <div class="modal">
+        <div class="modal-handle"></div>
+        <div class="modal-title" id="mPlantTitle">🌱 Aggiungi Pianta</div>
+        <div class="fgroup">
+            <label class="flabel">Nome</label>
+            <input class="finput" id="mNome" type="text" placeholder="es. Pesco 1, Melo Golden…">
+        </div>
+        <div class="fgroup">
+            <label class="flabel">Categoria</label>
+            <div class="sel-wrap">
+                <select class="fselect" id="mCat" onchange="fillFasi()">
+                    <option value="drupacee">🍑 Drupacee (Pesco, Albicocco, Ciliegio)</option>
+                    <option value="pomacee">🍎 Pomacee (Melo, Pero)</option>
+                    <option value="vigneto">🍇 Vigneto</option>
+                    <option value="orto">🥬 Orto</option>
+                </select>
+            </div>
+        </div>
+        <div class="fgroup">
+            <label class="flabel">Fase Fenologica Attuale</label>
+            <div class="sel-wrap"><select class="fselect" id="mFase"></select></div>
+        </div>
+        <div class="fgroup" style="margin-bottom:0">
+            <label class="flabel">Note</label>
+            <input class="finput" id="mNote" type="text" placeholder="es. angolo nord, innestato 2022…">
+        </div>
+        <input type="hidden" id="mEditId">
+        <hr>
+        <div class="row2">
+            <button class="btn btn-out" onclick="closeModal('mPlant')">Annulla</button>
+            <button class="btn btn-green" onclick="savePlant()">💾 Salva</button>
+        </div>
+    </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════
+// DATABASE
+// ═══════════════════════════════════════════════
+
+const DB = {
+    neem: {
+        nome: "Olio di Neem", emoji: "🌿",
+        doseL: 3, unit: "ml",
+        intervallo: 12, carenza: 3,
+        cats: ["drupacee","pomacee","vigneto","orto"],
+        note: "Aggiungere sempre il Sapone Molle come adesivante"
+    },
+    sapone: {
+        nome: "Sapone Molle Potassico", emoji: "🧴",
+        doseL: 10, unit: "ml",
+        intervallo: null, carenza: null,
+        cats: ["drupacee","pomacee","vigneto","orto"],
+        note: "Adesivante universale — usarlo con Neem e Bicarbonato"
+    },
+    verderame: {
+        nome: "Verderame", emoji: "🔵",
+        sub: "(Bolla / Ticchiolatura / Peronospora)",
+        doseL: 6.6, unit: "g",
+        intervallo: null, carenza: 20,
+        cats: ["drupacee","pomacee","vigneto"],
+        note: "⚠️ MAI in fioritura! Pericolo api.",
+        blockatoIn: ["fioritura"],
+        incompWith: ["bicarbonato"]
+    },
+    bt: {
+        nome: "Bacillus Thuringiensis", emoji: "🦠",
+        sub: "(contro larve/bruchi)",
+        doseL: 1.3, unit: "g",
+        intervallo: 7, carenza: null,
+        cats: ["drupacee","pomacee","vigneto","orto"],
+        note: "Insetticida biologico selettivo",
+        blockatoIn: ["fioritura"]
+    },
+    caolino: {
+        nome: "Caolino", emoji: "⚪",
+        doseL: 30, unit: "g",
+        intervallo: 21, carenza: null,
+        cats: ["drupacee","pomacee","vigneto","orto"],
+        note: "Barriera fisica riflettente contro insetti e calore",
+        suggestIn: { vigneto: ["invetiatura","maturazione"], drupacee: ["maturazione"], pomacee: ["sviluppo_frutti","maturazione"] }
+    },
+    bicarbonato: {
+        nome: "Bicarbonato di Potassio", emoji: "🧂",
+        sub: "(Anti-oidio)",
+        doseL: 5, unit: "g",
+        intervallo: null, carenza: 1,
+        cats: ["pomacee","vigneto","orto"],
+        note: "⚠️ MAI con Verderame/Rame!",
+        incompWith: ["verderame"]
+    }
+};
+
+const FASI = {
+    drupacee: [
+        { id:"dormienza",         nome:"🌑 Dormienza",               alert:false },
+        { id:"rigonfiamento",     nome:"🌰 Gemma Gonfia",             alert:false },
+        { id:"bottoni_rosa",      nome:"🌸 Bottoni Rosa",             alert:false },
+        { id:"fioritura",         nome:"🌸 FIORITURA ⚠️",            alert:true  },
+        { id:"scamiciatura",      nome:"🍑 Scamiciatura (cade petalo)",alert:false },
+        { id:"allegagione",       nome:"🍑 Allegagione",              alert:false },
+        { id:"ingrossamento",     nome:"🍑 Ingrossamento",            alert:false },
+        { id:"indurimento",       nome:"🍑 Indurimento Nocciolo",     alert:false },
+        { id:"maturazione",       nome:"🍑 Maturazione",              alert:false },
+        { id:"raccolta",          nome:"🍂 Raccolta",                 alert:false },
+        { id:"post_raccolta",     nome:"🍂 Post-Raccolta",            alert:false }
+    ],
+    pomacee: [
+        { id:"dormienza",         nome:"🌑 Dormienza",               alert:false },
+        { id:"orecchiette",       nome:"🌰 Orecchiette di Topo",      alert:false },
+        { id:"punta_verde",       nome:"🌱 Punta Verde",              alert:false },
+        { id:"mazzetti",          nome:"🌱 Mazzetti Affioranti",      alert:false },
+        { id:"prefioritura",      nome:"🌸 Prefioritura (Punta Rosa)",alert:false },
+        { id:"fioritura",         nome:"🌸 FIORITURA ⚠️",            alert:true  },
+        { id:"allegagione",       nome:"🍎 Allegagione",              alert:false },
+        { id:"sviluppo_frutti",   nome:"🍎 Sviluppo Frutti",          alert:false },
+        { id:"maturazione",       nome:"🍎 Maturazione",              alert:false },
+        { id:"raccolta",          nome:"🍂 Raccolta",                 alert:false },
+        { id:"post_raccolta",     nome:"🍂 Post-Raccolta",            alert:false }
+    ],
+    vigneto: [
+        { id:"potatura",          nome:"✂️ Potatura",                 alert:false },
+        { id:"germogliamento",    nome:"🌱 Germogliamento (Bud Break)",alert:false },
+        { id:"fogliazione",       nome:"🍃 Fogliazione (Leafing)",    alert:false },
+        { id:"prefioritura",      nome:"🌸 Prefioritura",             alert:false },
+        { id:"fioritura",         nome:"🌸 FIORITURA ⚠️",            alert:true  },
+        { id:"allegagione",       nome:"🍇 Allegagione (Fruit Set)",  alert:false },
+        { id:"invetiatura",       nome:"🍇 INVETIATURA (Veraison)",   alert:false, suggest:["caolino"] },
+        { id:"maturazione",       nome:"🍇 Maturazione",              alert:false },
+        { id:"vendemmia",         nome:"🍇 Vendemmia",                alert:false }
+    ],
+    orto: [
+        { id:"semina",            nome:"🌱 Semina",                   alert:false },
+        { id:"germinazione",      nome:"🌱 Germinazione",             alert:false },
+        { id:"sviluppo_veg",      nome:"🌿 Sviluppo Vegetativo",      alert:false },
+        { id:"fioritura",         nome:"🌸 FIORITURA ⚠️",            alert:true  },
+        { id:"sviluppo_frutti",   nome:"🥬 Sviluppo Frutti/Foglie",   alert:false },
+        { id:"pre_raccolta",      nome:"⏰ Pre-Raccolta (attenzione carenze!)", alert:false },
+        { id:"raccolta",          nome:"🥬 Raccolta",                 alert:false }
+    ]
+};
+
+const EMO = { drupacee:"&#127825;", pomacee:"&#127822;", vigneto:"&#127815;", orto:"&#129388;" };
+
+const DEF_PLANTS = [
+    { id:"dp1", nome:"Pesco 1",    cat:"drupacee", fase:"dormienza",    note:"" },
+    { id:"dp2", nome:"Pesco 2",    cat:"drupacee", fase:"dormienza",    note:"" },
+    { id:"dp3", nome:"Melo",       cat:"pomacee",  fase:"dormienza",    note:"" },
+    { id:"dp4", nome:"Pero",       cat:"pomacee",  fase:"dormienza",    note:"" },
+    { id:"dp5", nome:"Vite",       cat:"vigneto",  fase:"potatura",     note:"" },
+    { id:"dp6", nome:"Orto",       cat:"orto",     fase:"semina",       note:"" }
+];
+
+// ═══════════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════════
+let plants = [], treatments = [];
+let pump = "grande";
+let selIds = [], selProds = [];
+let catFilter = "all";
+
+function load() {
+    const p = localStorage.getItem("fg2_plants");
+    const t = localStorage.getItem("fg2_treats");
+    plants = p ? JSON.parse(p) : JSON.parse(JSON.stringify(DEF_PLANTS));
+    treatments = t ? JSON.parse(t) : [];
+    if (!p) save("plants");
+}
+function save(what) {
+    if (what === "plants") localStorage.setItem("fg2_plants", JSON.stringify(plants));
+    if (what === "treats") localStorage.setItem("fg2_treats", JSON.stringify(treatments));
+}
+
+// ═══════════════════════════════════════════════
+// UTILS
+// ═══════════════════════════════════════════════
+function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2); }
+function today() { return new Date().toISOString().slice(0,10); }
+function fmtDate(s) {
+    if (!s) return "";
+    return new Date(s).toLocaleDateString("it-IT", { day:"2-digit", month:"short", year:"numeric" });
+}
+function fmtShort(s) {
+    if (!s) return "";
+    return new Date(s).toLocaleDateString("it-IT", { day:"2-digit", month:"2-digit" });
+}
+function addDays(s, n) {
+    const d = new Date(s); d.setDate(d.getDate() + n);
+    return d.toISOString().slice(0,10);
+}
+function diffDays(s) {
+    const a = new Date(); a.setHours(0,0,0,0);
+    const b = new Date(s); b.setHours(0,0,0,0);
+    return Math.round((b - a) / 86400000);
+}
+function getFase(plant) {
+    return (FASI[plant.cat] || []).find(f => f.id === plant.fase) || FASI[plant.cat][0];
+}
+
+function toast(msg, type="ok", ms=3000) {
+    const icons = { ok:"✅", err:"❌", wrn:"⚠️", info:"ℹ️" };
+    const el = document.createElement("div");
+    el.className = `toast ${type}`;
+    el.innerHTML = `<span>${icons[type]}</span><span>${msg}</span>`;
+    document.getElementById("toasts").appendChild(el);
+    setTimeout(() => el.remove(), ms);
+}
+
+// ═══════════════════════════════════════════════
+// NAVIGATION
+// ═══════════════════════════════════════════════
+function goTo(name, btn) {
+    document.querySelectorAll(".view").forEach(v => v.classList.remove("on"));
+    document.querySelectorAll(".nav-btn").forEach(b => b.classList.remove("on"));
+    document.getElementById(`v-${name}`).classList.add("on");
+    btn.classList.add("on");
+    if (name === "prepara") renderPrepara();
+    if (name === "storico") renderStorico();
+    if (name === "scad")    renderScad();
+    if (name === "piante")  { renderPiante(); renderDashboard(); }
+}
+
+// ═══════════════════════════════════════════════
+// DASHBOARD
+// ═══════════════════════════════════════════════
+function renderDashboard() {
+    const el = document.getElementById("dashboard");
+    const scad = computeScad().filter(s => s.tipo === "treat");
+    const scadute  = scad.filter(s => s.d < 0).sort((a,b) => a.d - b.d);
+    const oggi     = scad.filter(s => s.d === 0);
+    const prossime = scad.filter(s => s.d > 0 && s.d <= 5).sort((a,b) => a.d - b.d);
+
+    if (!scadute.length && !oggi.length && !prossime.length) {
+        el.innerHTML = `<div class="dash-ok">
+            <div class="dash-ok-ico">✅</div>
+            <div>
+                <div class="dash-ok-t">Tutto in ordine!</div>
+                <div class="dash-ok-s">Nessun trattamento urgente</div>
+            </div>
+        </div>`;
+        return;
+    }
+
+    let h = "";
+
+    if (scadute.length || oggi.length) {
+        h += `<div class="dash-section-title">🚨 Da fare ora</div>`;
+        [...oggi, ...scadute].forEach(s => {
+            const lbl = s.d === 0 ? "OGGI" : `${Math.abs(s.d)}gg fa`;
+            const cls = s.d < 0 ? "red" : "amber";
+            h += `<div class="dash-urgent ${cls}" onclick="goToPreparaSuggerito()">
+                <div class="dash-urgent-days">${lbl}</div>
+                <div>
+                    <div class="dash-urgent-t">${s.pName}</div>
+                    <div class="dash-urgent-s">${s.prodName}</div>
+                </div>
+            </div>`;
+        });
+    }
+
+    if (prossime.length) {
+        h += `<div class="dash-section-title">📅 In scadenza (entro 5 giorni)</div>`;
+        prossime.forEach(s => {
+            h += `<div class="dash-urgent amber" onclick="goToPreparaSuggerito()">
+                <div class="dash-urgent-days">+${s.d}gg</div>
+                <div>
+                    <div class="dash-urgent-t">${s.pName}</div>
+                    <div class="dash-urgent-s">${s.prodName}</div>
+                </div>
+            </div>`;
+        });
+    }
+
+    el.innerHTML = h;
+}
+
+function goToPreparaSuggerito() {
+    document.querySelector('[onclick*="prepara"]').click();
+    setTimeout(loadSuggeriti, 200);
+}
+
+// ═══════════════════════════════════════════════
+// SUGGERITI
+// ═══════════════════════════════════════════════
+function loadSuggeriti() {
+    // Trova piante con trattamenti scaduti/in scadenza oggi
+    const scad = computeScad().filter(s => s.tipo === "treat" && s.d <= 0);
+
+    // Piante suggerite: quelle nei trattamenti scaduti
+    const suggestedPlantIds = new Set();
+    const suggestedProdIds  = new Set();
+
+    for (const t of treatments) {
+        for (const p of t.prodotti) {
+            if (!p.intervallo) continue;
+            const next = addDays(t.data, p.intervallo);
+            if (diffDays(next) <= 0) {
+                t.pianteIds.forEach(id => suggestedPlantIds.add(id));
+                suggestedProdIds.add(p.id);
+            }
+        }
+    }
+
+    // Anche piante mai trattate
+    if (!suggestedPlantIds.size) {
+        plants.forEach(p => suggestedPlantIds.add(p.id));
+    }
+
+    // Suggerimenti da fase fenologica
+    plants.forEach(p => {
+        const faseObj = (FASI[p.cat] || []).find(f => f.id === p.fase);
+        if (faseObj?.suggest) faseObj.suggest.forEach(id => suggestedProdIds.add(id));
+        // Caolino in invetiatura/maturazione
+        if (p.cat === "vigneto" && ["invetiatura","maturazione"].includes(p.fase)) {
+            suggestedProdIds.add("caolino");
+            suggestedPlantIds.add(p.id);
+        }
+    });
+
+    if (!suggestedPlantIds.size && !suggestedProdIds.size) {
+        toast("Nessun trattamento suggerito per oggi!", "info");
+        return;
+    }
+
+    selIds   = [...suggestedPlantIds];
+    selProds = [...suggestedProdIds].filter(id => DB[id]);
+    renderPrepara();
+
+    const n = selIds.length + selProds.length;
+    toast(`${selIds.length} piante e ${selProds.length} prodotti pre-selezionati!`, "ok");
+}
+
+// ═══════════════════════════════════════════════
+// CALENDARIO
+// ═══════════════════════════════════════════════
+let calYear  = new Date().getFullYear();
+let calMonth = new Date().getMonth();
+
+const MESI = ["Gennaio","Febbraio","Marzo","Aprile","Maggio","Giugno",
+              "Luglio","Agosto","Settembre","Ottobre","Novembre","Dicembre"];
+const GIORNI = ["Lu","Ma","Me","Gi","Ve","Sa","Do"];
+
+function renderCalendar() {
+    document.getElementById("calTitle").textContent = `${MESI[calMonth]} ${calYear}`;
+
+    const firstDay = new Date(calYear, calMonth, 1);
+    const lastDay  = new Date(calYear, calMonth + 1, 0);
+    const startDow = (firstDay.getDay() + 6) % 7; // Monday=0
+
+    // Build maps: date string → dots
+    const dotMap = {};
+
+    // Past treatments → green dot
+    treatments.forEach(t => {
+        const d = t.data.slice(0, 10);
+        if (!dotMap[d]) dotMap[d] = new Set();
+        dotMap[d].add("green");
+    });
+
+    // Future due dates
+    const scad = computeScad().filter(s => s.tipo === "treat");
+    scad.forEach(s => {
+        // Compute the actual date
+        for (const t of treatments) {
+            for (const p of t.prodotti) {
+                if (!p.intervallo) continue;
+                const nextDate = addDays(t.data, p.intervallo);
+                const d = diffDays(nextDate);
+                if (!dotMap[nextDate]) dotMap[nextDate] = new Set();
+                dotMap[nextDate].add(d < 0 ? "red" : "orange");
+            }
+        }
+    });
+
+    let h = GIORNI.map(g => `<div class="cal-day-hdr">${g}</div>`).join("");
+
+    // Empty cells before first day
+    for (let i = 0; i < startDow; i++) h += `<div class="cal-day other-month"></div>`;
+
+    const todayStr = today();
+    for (let day = 1; day <= lastDay.getDate(); day++) {
+        const mm = String(calMonth + 1).padStart(2, "0");
+        const dd = String(day).padStart(2, "0");
+        const dateStr = `${calYear}-${mm}-${dd}`;
+        const isToday = dateStr === todayStr;
+
+        const dots = dotMap[dateStr] ? [...dotMap[dateStr]] : [];
+        const dotsHtml = dots.length
+            ? `<div class="cal-dots">${dots.map(c => `<div class="cal-dot ${c}"></div>`).join("")}</div>`
+            : "";
+
+        h += `<div class="cal-day ${isToday ? "today" : ""}">${day}${dotsHtml}</div>`;
+    }
+
+    document.getElementById("calGrid").innerHTML = h;
+}
+
+function calPrev() {
+    calMonth--;
+    if (calMonth < 0) { calMonth = 11; calYear--; }
+    renderCalendar();
+}
+function calNext() {
+    calMonth++;
+    if (calMonth > 11) { calMonth = 0; calYear++; }
+    renderCalendar();
+}
+
+// ═══════════════════════════════════════════════
+// PIANTE
+// ═══════════════════════════════════════════════
+function renderPiante() {
+    const el = document.getElementById("plantList");
+    let list = catFilter === "all" ? plants : plants.filter(p => p.cat === catFilter);
+    if (!list.length) {
+        el.innerHTML = `<div class="empty"><div class="empty-ico">🌱</div><div class="empty-t">Nessuna pianta</div><div class="empty-s">Usa "+ Aggiungi" per iniziare</div></div>`;
+        return;
+    }
+    el.innerHTML = list.map(p => {
+        const f = getFase(p);
+        return `<div class="pcard ${p.cat}" onclick="openEdit('${p.id}')">
+            <div class="pcard-ico">${EMO[p.cat]}</div>
+            <div class="pcard-info">
+                <div class="pcard-cat">${p.cat}</div>
+                <div class="pcard-name">${p.nome}</div>
+                <div class="pcard-fase ${f.alert ? 'alert' : ''}">${f.nome}</div>
+                ${p.note ? `<div class="pcard-note">${p.note}</div>` : ""}
+            </div>
+            <button class="ico-btn" onclick="event.stopPropagation();delPlant('${p.id}')">🗑️</button>
+        </div>`;
+    }).join("");
+}
+
+function filterCat(cat, el) {
+    catFilter = cat;
+    document.querySelectorAll(".chip").forEach(c => c.classList.remove("on"));
+    el.classList.add("on");
+    renderPiante();
+}
+
+function openAdd() {
+    document.getElementById("mPlantTitle").textContent = "🌱 Aggiungi Pianta";
+    document.getElementById("mNome").value = "";
+    document.getElementById("mCat").value = "drupacee";
+    document.getElementById("mNote").value = "";
+    document.getElementById("mEditId").value = "";
+    fillFasi();
+    document.getElementById("mPlant").classList.remove("hide");
+}
+
+function openEdit(id) {
+    const p = plants.find(x => x.id === id);
+    if (!p) return;
+    document.getElementById("mPlantTitle").textContent = "✏️ Modifica Pianta";
+    document.getElementById("mNome").value = p.nome;
+    document.getElementById("mCat").value = p.cat;
+    document.getElementById("mNote").value = p.note || "";
+    document.getElementById("mEditId").value = id;
+    fillFasi(p.fase);
+    document.getElementById("mPlant").classList.remove("hide");
+}
+
+function fillFasi(sel = null) {
+    const cat = document.getElementById("mCat").value;
+    const el = document.getElementById("mFase");
+    el.innerHTML = FASI[cat].map(f => `<option value="${f.id}">${f.nome}</option>`).join("");
+    if (sel) el.value = sel;
+}
+
+function savePlant() {
+    const nome = document.getElementById("mNome").value.trim();
+    if (!nome) { toast("Inserisci il nome della pianta", "err"); return; }
+    const cat   = document.getElementById("mCat").value;
+    const fase  = document.getElementById("mFase").value;
+    const note  = document.getElementById("mNote").value.trim();
+    const eid   = document.getElementById("mEditId").value;
+
+    if (eid) {
+        const i = plants.findIndex(x => x.id === eid);
+        if (i !== -1) plants[i] = { ...plants[i], nome, cat, fase, note };
+        toast("Pianta aggiornata!");
+    } else {
+        plants.push({ id: uid(), nome, cat, fase, note });
+        toast("Pianta aggiunta!");
+    }
+    save("plants");
+    closeModal("mPlant");
+    renderPiante();
+}
+
+function delPlant(id) {
+    if (!confirm("Eliminare questa pianta?")) return;
+    plants = plants.filter(p => p.id !== id);
+    save("plants");
+    renderPiante();
+    toast("Pianta eliminata", "wrn");
+}
+
+function closeModal(id) { document.getElementById(id).classList.add("hide"); }
+
+// ═══════════════════════════════════════════════
+// PREPARA
+// ═══════════════════════════════════════════════
+function renderPrepara() {
+    renderPChecks();
+    renderFaseAlert();
+    renderProds();
+    renderDoseSummary();
+    const d = document.getElementById("txDate");
+    if (!d.value) d.value = today();
+}
+
+function selPump(t) {
+    pump = t;
+    document.getElementById("pmp-grande").classList.toggle("on", t === "grande");
+    document.getElementById("pmp-piccola").classList.toggle("on", t === "piccola");
+    renderProds();
+    renderDoseSummary();
+}
+
+function renderPChecks() {
+    const el = document.getElementById("pChecks");
+    if (!plants.length) {
+        el.innerHTML = `<div style="color:var(--txt2);font-size:13px;padding:8px">Prima aggiungi le piante nella scheda 🌿</div>`;
+        return;
+    }
+    el.innerHTML = plants.map(p => {
+        const f = getFase(p);
+        return `<label class="pcheck">
+            <input type="checkbox" value="${p.id}" onchange="onCheck()"
+                ${selIds.includes(p.id) ? "checked" : ""}>
+            <span>${EMO[p.cat]}</span>
+            <span style="font-weight:700;flex:1">${p.nome}</span>
+            <span style="font-size:11px;color:var(--txt2)">${f.nome}</span>
+        </label>`;
+    }).join("");
+}
+
+function onCheck() {
+    selIds = [...document.querySelectorAll("#pChecks input:checked")].map(c => c.value);
+    renderFaseAlert();
+    renderProds();
+    renderDoseSummary();
+}
+
+function getCtx() {
+    const sel = plants.filter(p => selIds.includes(p.id));
+    const cats = [...new Set(sel.map(p => p.cat))];
+    const fasi = sel.map(p => p.fase);
+    const inFior = fasi.includes("fioritura");
+    const selVite = sel.filter(p => p.cat === "vigneto");
+    const inInvet = selVite.some(p => p.fase === "invetiatura");
+    return { sel, cats, fasi, inFior, inInvet };
+}
+
+function renderFaseAlert() {
+    const { inFior, inInvet, sel } = getCtx();
+    let h = "";
+    if (inFior) h += `<div class="alert-box danger"><span class="alert-ico">🐝</span>
+        <span class="alert-txt"><strong>PERICOLO API — FIORITURA!</strong><br>
+        Verderame e insetticidi (BT) sono BLOCCATI.<br>
+        Non trattare mai con rame o insetticidi sui fiori!</span></div>`;
+    if (inInvet) h += `<div class="alert-box info"><span class="alert-ico">⭐</span>
+        <span class="alert-txt">Vigneto in <strong>INVETIATURA</strong>: il <strong>Caolino</strong> è consigliato per proteggere gli acini dal calore e dagli insetti.</span></div>`;
+
+    // Orto pre-raccolta
+    const hasPreRac = sel.some(p => p.cat === "orto" && p.fase === "pre_raccolta");
+    if (hasPreRac) h += `<div class="alert-box warn"><span class="alert-ico">⏰</span>
+        <span class="alert-txt">Orto in <strong>PRE-RACCOLTA</strong>: rispetta scrupolosamente i tempi di carenza prima di raccogliere!</span></div>`;
+
+    document.getElementById("faseAlert").innerHTML = h;
+}
+
+function renderProds() {
+    const L = pump === "grande" ? 15 : 2;
+    const { cats, inFior, inInvet, sel } = getCtx();
+    const el = document.getElementById("prodList");
+
+    if (!sel.length) {
+        el.innerHTML = `<div style="color:var(--txt2);font-size:13px">Seleziona prima le piante da trattare</div>`;
+        return;
+    }
+
+    let h = "";
+    for (const [id, p] of Object.entries(DB)) {
+        // Filter by category
+        if (!cats.some(c => p.cats.includes(c))) continue;
+
+        const dose = p.doseL * L;
+        const doseStr = Number.isInteger(dose) ? dose : dose.toFixed(1);
+        const isOn = selProds.includes(id);
+        const blocked = inFior && (p.blockatoIn || []).includes("fioritura");
+        const incompat = !isOn && (p.incompWith || []).some(x => selProds.includes(x));
+
+        // Suggestion logic
+        let isSuggest = false;
+        if (p.suggestIn) {
+            for (const [cat, fasi] of Object.entries(p.suggestIn)) {
+                if (sel.some(pl => pl.cat === cat && fasi.includes(pl.fase))) {
+                    isSuggest = true; break;
+                }
+            }
+        }
+
+        let cls = "prod-item";
+        if (isOn)      cls += " on";
+        if (blocked)   cls += " blocked";
+        if (incompat && !isOn) cls += " incompat";
+        if (isSuggest && !isOn) cls += " suggest";
+
+        const carH = p.carenza  ? `<div class="prod-timing carenza">⏱️ Carenza: ${p.carenza} giorni</div>` : "";
+        const intH = p.intervallo ? `<div class="prod-timing interval">🔄 Intervallo: ${p.intervallo} giorni</div>` : "";
+
+        h += `<div class="${cls}" onclick="${blocked ? 'blockedAlert()' : `toggleProd('${id}')`}">
+            ${blocked   ? '<div class="blocked-lbl">🚫 BLOCCATO in fioritura — protezione api</div>' : ""}
+            ${incompat && !isOn ? '<div class="incompat-lbl">⚠️ Incompatibile con prodotto già selezionato</div>' : ""}
+            <div class="prod-hdr">
+                <div>
+                    <div class="prod-name">${p.emoji} ${p.nome}</div>
+                    ${p.sub ? `<div class="prod-sub">${p.sub}</div>` : ""}
+                </div>
+                <div>
+                    <div class="prod-dose">${doseStr} ${p.unit}</div>
+                    <div class="prod-dose-lbl">in ${L}L</div>
+                </div>
+            </div>
+            <div class="prod-note">${p.note}</div>
+            ${carH}${intH}
+        </div>`;
+    }
+    el.innerHTML = h;
+}
+
+function blockedAlert() { toast("Prodotto bloccato in fioritura — proteggi le api!", "wrn", 4000); }
+
+function toggleProd(id) {
+    const p = DB[id];
+    // Incompatibility check
+    if (!selProds.includes(id) && p.incompWith) {
+        const conf = p.incompWith.find(x => selProds.includes(x));
+        if (conf) {
+            toast(`${p.nome} NON è compatibile con ${DB[conf].nome}!`, "err", 4000);
+            return;
+        }
+    }
+    const i = selProds.indexOf(id);
+    if (i === -1) selProds.push(id); else selProds.splice(i, 1);
+    renderProds();
+    renderDoseSummary();
+}
+
+function renderDoseSummary() {
+    const el = document.getElementById("doseSummary");
+    if (!selProds.length) { el.innerHTML = ""; return; }
+    const L = pump === "grande" ? 15 : 2;
+    const pName = pump === "grande" ? "Pompa Grande — 15L" : "Pompa Piccola — 2L";
+    const rows = selProds.map(id => {
+        const p = DB[id];
+        const dose = p.doseL * L;
+        const doseStr = Number.isInteger(dose) ? dose : dose.toFixed(1);
+        return `<div class="dose-row">
+            <span class="dose-prod">${p.emoji} ${p.nome}</span>
+            <span class="dose-amt">${doseStr} ${p.unit}</span>
+        </div>`;
+    }).join("");
+    el.innerHTML = `<div class="dose-sum"><h3>📊 Riepilogo — ${pName}</h3>${rows}</div>`;
+}
+
+function doSave() {
+    if (!selIds.length) { toast("Seleziona almeno una pianta", "err"); return; }
+    if (!selProds.length) { toast("Seleziona almeno un prodotto", "err"); return; }
+
+    const L = pump === "grande" ? 15 : 2;
+    const data = document.getElementById("txDate").value || today();
+    const note = document.getElementById("txNote").value.trim();
+
+    const prodotti = selProds.map(id => {
+        const p = DB[id];
+        const dose = p.doseL * L;
+        return {
+            id, nome: p.nome, emoji: p.emoji,
+            qty: Number.isInteger(dose) ? dose : parseFloat(dose.toFixed(1)),
+            unit: p.unit,
+            intervallo: p.intervallo, carenza: p.carenza
+        };
+    });
+
+    treatments.unshift({ id: uid(), data, pompa: pump, L, pianteIds: [...selIds], prodotti, note });
+    saveAndSync("treats");
+    selProds = []; selIds = [];
+    renderPrepara();
+    toast("Trattamento registrato!", "ok");
+    setTimeout(() => document.querySelector('[onclick*="storico"]').click(), 500);
+}
+
+// ═══════════════════════════════════════════════
+// STORICO
+// ═══════════════════════════════════════════════
+function renderStorico() {
+    const el = document.getElementById("histList");
+    document.getElementById("stCount").textContent = `${treatments.length} trattamenti`;
+    if (!treatments.length) {
+        el.innerHTML = `<div class="empty"><div class="empty-ico">📋</div><div class="empty-t">Nessun trattamento ancora</div><div class="empty-s">Usa "Prepara" per registrare</div></div>`;
+        return;
+    }
+    el.innerHTML = treatments.map(t => {
+        const pNames = t.pianteIds.map(id => plants.find(p => p.id === id)?.nome || "?").join(", ");
+        const pumpLbl = t.pompa === "grande" ? "🪣 15L" : "🫙 2L";
+        const tags = t.prodotti.map(p => `<span class="tag">${p.emoji} ${p.nome}: ${p.qty}${p.unit}</span>`).join("");
+        const nextInfo = buildNextInfo(t);
+        return `<div class="hist-item">
+            <div class="hist-date">📅 ${fmtDate(t.data)} &nbsp;|&nbsp; ${pumpLbl}</div>
+            <div class="hist-plants">${pNames}</div>
+            <div class="tags">${tags}</div>
+            ${nextInfo}
+            ${t.note ? `<div style="font-size:12px;color:var(--txt2);margin-top:5px">💬 ${t.note}</div>` : ""}
+            <div class="hist-actions">
+                <button class="btn btn-wa btn-sm" onclick="sendWA('${t.id}')">📱 WhatsApp</button>
+                <button class="btn btn-out btn-sm" onclick="delTreat('${t.id}')">🗑️ Elimina</button>
+            </div>
+        </div>`;
+    }).join("");
+}
+
+function buildNextInfo(t) {
+    let h = "";
+    const intervals = t.prodotti.filter(p => p.intervallo).map(p => p.intervallo);
+    if (intervals.length) {
+        const minInt = Math.min(...intervals);
+        const next = addDays(t.data, minInt);
+        const d = diffDays(next);
+        let style, lbl;
+        if (d < 0)      { style = "color:var(--red);font-weight:800";   lbl = `Scaduto ${Math.abs(d)}gg fa!`; }
+        else if (d === 0){ style = "color:var(--amber);font-weight:900"; lbl = "OGGI!"; }
+        else             { style = "color:var(--green)";                  lbl = `tra ${d}gg (${fmtShort(next)})`; }
+        h += `<div class="next-box">🔄 Prossimo trattamento: <strong style="${style}">&nbsp;${lbl}</strong></div>`;
+    }
+    const carenze = t.prodotti.filter(p => p.carenza).map(p => p.carenza);
+    if (carenze.length) {
+        const maxCar = Math.max(...carenze);
+        const ok = addDays(t.data, maxCar);
+        const d = diffDays(ok);
+        let style, lbl;
+        if (d <= 0) { style = "color:var(--green)"; lbl = "Raccolta sicura ✅"; }
+        else        { style = "color:var(--amber)"; lbl = `OK raccolta tra ${d}gg (${fmtShort(ok)})`; }
+        h += `<div class="next-box" style="background:#fff3e0;border-color:#ffcc80">⏱️ Carenza: <strong style="${style}">&nbsp;${lbl}</strong></div>`;
+    }
+    return h;
+}
+
+function delTreat(id) {
+    if (!confirm("Eliminare questo trattamento?")) return;
+    treatments = treatments.filter(t => t.id !== id);
+    save("treats");
+    renderStorico();
+    toast("Trattamento eliminato", "wrn");
+}
+
+function sendWA(id) {
+    const t = treatments.find(x => x.id === id);
+    if (!t) return;
+    const pNames = t.pianteIds.map(id => plants.find(p => p.id === id)?.nome || "?").join(", ");
+    const pumpLbl = t.pompa === "grande" ? "Pompa Grande (15L)" : "Pompa Piccola (2L)";
+    const prodLines = t.prodotti.map(p => `  • ${p.emoji} ${p.nome}: ${p.qty} ${p.unit}`).join("\n");
+    const carenze = t.prodotti.filter(p => p.carenza).map(p => p.carenza);
+    const carInfo = carenze.length ? `\n⏱️ Raccolta sicura dal: ${fmtDate(addDays(t.data, Math.max(...carenze)))}` : "";
+
+    const msg = `🌿 *TRATTAMENTO — FRUTTETO GABRIEL*
+📅 Data: ${fmtDate(t.data)}
+🌱 Piante: ${pNames}
+🪣 Pompa: ${pumpLbl}
+
+📋 *PRODOTTI E DOSI:*
+${prodLines}${carInfo}
+${t.note ? `\n💬 ${t.note}` : ""}
+_— Frutteto Gabriel App_`;
+
+    window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, "_blank");
+}
+
+// ═══════════════════════════════════════════════
+// SCADENZE
+// ═══════════════════════════════════════════════
+function renderScad() {
+    renderCalendar();
+    const scad = computeScad();
+    const el   = document.getElementById("scList");
+    const st   = document.getElementById("scStats");
+
+    const nScad  = scad.filter(s => s.tipo === "treat" && s.d < 0).length;
+    const nOggi  = scad.filter(s => s.d === 0).length;
+    const nCar   = scad.filter(s => s.tipo === "car"   && s.d > 0).length;
+
+    st.innerHTML = `
+        <div class="stat"><div class="stat-n" style="color:var(--red)">${nScad}</div><div class="stat-l">Scaduti</div></div>
+        <div class="stat"><div class="stat-n" style="color:var(--amber)">${nOggi}</div><div class="stat-l">Oggi</div></div>
+        <div class="stat"><div class="stat-n">${nCar}</div><div class="stat-l">In Carenza</div></div>`;
+
+    updateBadge(nScad + nOggi);
+
+    if (!scad.length) {
+        el.innerHTML = `<div class="empty"><div class="empty-ico">✅</div><div class="empty-t">Tutto in ordine!</div></div>`;
+        return;
+    }
+
+    el.innerHTML = scad.sort((a,b) => a.d - b.d).map(s => {
+        let cls = s.d < 0 ? "red" : (s.d <= 3 ? "amber" : "ok");
+        const giorniLbl = s.d < 0 ? `${Math.abs(s.d)}gg` : (s.d === 0 ? "OGGI" : `+${s.d}gg`);
+        const subtitle = s.d < 0 ? "FA" : "MANCANO";
+        const ico = s.tipo === "car" ? "⏱️ CARENZA" : "🔄 PROSSIMO TRATTAMENTO";
+        return `<div class="scad-card ${cls}">
+            <div>
+                <div class="scad-giorni">${giorniLbl}</div>
+                <div class="scad-lbl">${subtitle}</div>
+            </div>
+            <div class="scad-info">
+                <div class="scad-name">${s.pName}</div>
+                <div class="scad-prod">${ico}: ${s.prodName}</div>
+                <div class="scad-lbl">Trattato il ${fmtShort(s.dataT)}</div>
+            </div>
+        </div>`;
+    }).join("");
+}
+
+function computeScad() {
+    const res = [];
+    for (const t of treatments) {
+        const pName = t.pianteIds.map(id => plants.find(p => p.id === id)?.nome || "?").join(", ");
+        for (const p of t.prodotti) {
+            if (p.intervallo) {
+                res.push({ tipo:"treat", d: diffDays(addDays(t.data, p.intervallo)), pName, prodName: `${p.emoji} ${p.nome}`, dataT: t.data });
+            }
+            if (p.carenza) {
+                const dd = diffDays(addDays(t.data, p.carenza));
+                if (dd > 0) res.push({ tipo:"car", d: dd, pName, prodName: `${p.emoji} ${p.nome} (${p.carenza}gg)`, dataT: t.data });
+            }
+        }
+    }
+    return res;
+}
+
+function updateBadge(n) {
+    const btn = document.getElementById("navScad");
+    let badge = btn.querySelector(".nav-badge");
+    if (n > 0) {
+        if (!badge) { badge = document.createElement("div"); badge.className = "nav-badge"; btn.appendChild(badge); }
+        badge.textContent = n > 9 ? "9+" : n;
+    } else if (badge) {
+        badge.remove();
+    }
+}
+
+// ═══════════════════════════════════════════════
+// GITHUB GIST SYNC
+// ═══════════════════════════════════════════════
+
+function getGistCfg() {
+    return {
+        token:  localStorage.getItem("fg2_ghtoken") || "",
+        gistId: localStorage.getItem("fg2_gistid")  || ""
+    };
+}
+
+function openSettings() {
+    const { token, gistId } = getGistCfg();
+    document.getElementById("sToken").value  = token;
+    document.getElementById("sGistId").value = gistId;
+    renderSyncStatus();
+    document.getElementById("mSettings").classList.remove("hide");
+}
+
+function saveGistConfig() {
+    const t = document.getElementById("sToken").value.trim();
+    const g = document.getElementById("sGistId").value.trim();
+    if (t) localStorage.setItem("fg2_ghtoken", t);
+    if (g) localStorage.setItem("fg2_gistid", g);
+    renderSyncStatus();
+    toast("Configurazione salvata!", "ok");
+}
+
+function renderSyncStatus() {
+    const { token, gistId } = getGistCfg();
+    const el = document.getElementById("syncStatusBar");
+    if (!el) return;
+    if (!token) {
+        el.innerHTML = `<div class="sync-status off">☁️ Sync non configurato — inserisci il token</div>`;
+    } else if (!gistId) {
+        el.innerHTML = `<div class="sync-status err">⚠️ Token ok, ma nessun Gist — premi "Crea Gist"</div>`;
+    } else {
+        const last = localStorage.getItem("fg2_lastSync");
+        const lbl  = last ? `Ultimo sync: ${new Date(last).toLocaleString("it-IT")}` : "Pronto";
+        el.innerHTML = `<div class="sync-status ok">✅ Sync attivo — ${lbl}</div>`;
+    }
+}
+
+function setSyncBtn(loading) {
+    const btn = document.getElementById("syncBtn");
+    if (!btn) return;
+    btn.innerHTML = loading ? '<span class="spinning">↻</span>' : "☁️";
+}
+
+async function createGist() {
+    const token = document.getElementById("sToken").value.trim();
+    if (!token) { toast("Inserisci prima il token!", "err"); return; }
+    setSyncBtn(true);
+    try {
+        const payload = buildGistPayload();
+        const res = await fetch("https://api.github.com/gists", {
+            method: "POST",
+            headers: { "Authorization": `token ${token}`, "Content-Type": "application/json", "Accept": "application/vnd.github.v3+json" },
+            body: JSON.stringify({
+                description: "Frutteto Gabriel — Dati App",
+                public: false,
+                files: { "frutteto-data.json": { content: payload } }
+            })
+        });
+        if (!res.ok) throw new Error(res.status);
+        const gist = await res.json();
+        localStorage.setItem("fg2_ghtoken", token);
+        localStorage.setItem("fg2_gistid", gist.id);
+        localStorage.setItem("fg2_lastSync", new Date().toISOString());
+        document.getElementById("sGistId").value = gist.id;
+        renderSyncStatus();
+        toast("Gist creato! ID: " + gist.id.slice(0,8) + "…", "ok", 5000);
+    } catch(e) {
+        toast("Errore creazione Gist: " + e.message, "err");
+    }
+    setSyncBtn(false);
+}
+
+async function pushToGist() {
+    const { token, gistId } = getGistCfg();
+    if (!token || !gistId) { toast("Configura prima il Gist!", "err"); return; }
+    setSyncBtn(true);
+    try {
+        const payload = buildGistPayload();
+        const res = await fetch(`https://api.github.com/gists/${gistId}`, {
+            method: "PATCH",
+            headers: { "Authorization": `token ${token}`, "Content-Type": "application/json", "Accept": "application/vnd.github.v3+json" },
+            body: JSON.stringify({ files: { "frutteto-data.json": { content: payload } } })
+        });
+        if (!res.ok) throw new Error(res.status);
+        localStorage.setItem("fg2_lastSync", new Date().toISOString());
+        renderSyncStatus();
+        toast("Dati caricati su GitHub!", "ok");
+    } catch(e) {
+        toast("Errore upload: " + e.message, "err");
+    }
+    setSyncBtn(false);
+}
+
+async function pullFromGist() {
+    const { token, gistId } = getGistCfg();
+    if (!token || !gistId) { toast("Configura prima il Gist!", "err"); return; }
+    setSyncBtn(true);
+    try {
+        const res = await fetch(`https://api.github.com/gists/${gistId}`, {
+            headers: { "Authorization": `token ${token}`, "Accept": "application/vnd.github.v3+json" }
+        });
+        if (!res.ok) throw new Error(res.status);
+        const gist    = await res.json();
+        const content = gist.files["frutteto-data.json"]?.content;
+        if (!content) throw new Error("File non trovato nel Gist");
+        const remote = JSON.parse(content);
+        plants     = remote.plants     || [];
+        treatments = remote.treatments || [];
+        save("plants"); save("treats");
+        localStorage.setItem("fg2_lastSync", new Date().toISOString());
+        renderPiante(); renderDashboard();
+        renderSyncStatus();
+        toast("Dati scaricati da GitHub!", "ok");
+    } catch(e) {
+        toast("Errore download: " + e.message, "err");
+    }
+    setSyncBtn(false);
+}
+
+async function manualSync() {
+    const { token, gistId } = getGistCfg();
+    if (!token) { openSettings(); return; }
+    if (!gistId) { openSettings(); return; }
+    // Pull first, then push (merge: remote wins for newer data)
+    await pullFromGist();
+}
+
+function buildGistPayload() {
+    return JSON.stringify({
+        plants, treatments,
+        lastUpdated: new Date().toISOString(),
+        version: "2"
+    }, null, 2);
+}
+
+// Auto-sync on save
+function saveAndSync(what) {
+    save(what);
+    const { token, gistId } = getGistCfg();
+    if (token && gistId) pushToGist();
+}
+
+// ═══════════════════════════════════════════════
+// NOTIFICHE
+// ═══════════════════════════════════════════════
+function checkNotif() {
+    const scad = computeScad().filter(s => s.d <= 0 && s.tipo === "treat");
+    if (!scad.length) { toast("Nessuna notifica urgente", "info"); return; }
+    toast(`${scad.length} trattamenti scaduti/da fare oggi!`, "wrn", 5000);
+    if ("Notification" in window) {
+        Notification.requestPermission().then(p => {
+            if (p !== "granted") return;
+            scad.forEach(s => new Notification("🌿 Frutteto Gabriel", {
+                body: `${s.pName}: ${s.prodName} ${s.d === 0 ? "— DA FARE OGGI!" : `— scaduto ${Math.abs(s.d)}gg fa!`}`,
+                icon: "icon-192.png"
+            }));
+        });
+    }
+}
+
+// ═══════════════════════════════════════════════
+// MODALS — close on overlay tap
+// ═══════════════════════════════════════════════
+document.querySelectorAll(".overlay").forEach(o =>
+    o.addEventListener("click", e => { if (e.target === o) o.classList.add("hide"); })
+);
+
+// ═══════════════════════════════════════════════
+// SERVICE WORKER
+// ═══════════════════════════════════════════════
+if ("serviceWorker" in navigator) {
+    navigator.serviceWorker.register("sw.js")
+        .then(() => console.log("SW ok"))
+        .catch(e => console.warn("SW error", e));
+}
+
+// ═══════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════
+load();
+renderPiante();
+renderDashboard();
+setTimeout(() => {
+    const scad = computeScad();
+    const n = scad.filter(s => s.d < 0 && s.tipo === "treat").length;
+    updateBadge(n);
+    if (n > 0) toast(`⚠️ ${n} trattamenti scaduti!`, "wrn", 5000);
+}, 400);
+</script>
+</body>
+</html>

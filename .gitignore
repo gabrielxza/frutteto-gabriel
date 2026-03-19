@@ -1,0 +1,8 @@
+node_modules/
+android/
+www/
+*.txt
+generate-icons.html
+drupacee-image.jpg
+pomacee-image.jpg
+grapevine.jpg
