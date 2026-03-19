@@ -296,6 +296,18 @@
         .row2 { display: flex; gap: 10px; }
         .row2 .btn { flex: 1; }
 
+        /* PRODOTTI CUSTOM */
+        .prod-custom-tag {
+            display: inline-block; background: #e8eaf6; color: #3949ab;
+            font-size: 10px; font-weight: 800; padding: 1px 7px;
+            border-radius: 8px; margin-left: 6px; vertical-align: middle;
+        }
+        .gestisci-btn {
+            background: none; border: 1px solid var(--border); border-radius: 9px;
+            padding: 7px 13px; font-size: 12px; font-weight: 700; color: var(--txt2);
+            cursor: pointer; display: flex; align-items: center; gap: 5px; margin-bottom: 12px;
+        }
+
         /* SYNC */
         .sync-row { display: flex; gap: 10px; margin-bottom: 14px; }
         .sync-row .btn { flex: 1; }
@@ -442,6 +454,7 @@
 
         <div class="card">
             <label class="flabel">3 — Prodotti</label>
+            <button class="gestisci-btn" onclick="openProdotti()">⚗️ Gestisci prodotti personalizzati</button>
             <div id="prodList"></div>
         </div>
 
@@ -508,6 +521,57 @@
         <span class="ico">🔔</span>Scadenze
     </button>
 </nav>
+
+<!-- MODAL: PRODOTTI CUSTOM -->
+<div class="overlay hide" id="mProdotti">
+    <div class="modal">
+        <div class="modal-handle"></div>
+        <div class="modal-title">⚗️ Prodotti Personalizzati</div>
+        <div id="customProdList"></div>
+        <hr>
+        <div class="modal-title" style="font-size:16px" id="mProdTitle">➕ Nuovo Prodotto</div>
+        <div class="fgroup">
+            <label class="flabel">Nome Prodotto</label>
+            <input class="finput" id="pNome" type="text" placeholder="es. Zolfo bagnabile, Piretro…">
+        </div>
+        <div class="row2">
+            <div class="fgroup" style="flex:2">
+                <label class="flabel">Dose per litro</label>
+                <input class="finput" id="pDose" type="number" step="0.1" placeholder="es. 2">
+            </div>
+            <div class="fgroup" style="flex:1">
+                <label class="flabel">Unità</label>
+                <div class="sel-wrap">
+                    <select class="fselect" id="pUnit">
+                        <option value="ml">ml</option>
+                        <option value="g">g</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+        <div class="row2">
+            <div class="fgroup" style="flex:1">
+                <label class="flabel">Intervallo (gg)</label>
+                <input class="finput" id="pIntervallo" type="number" placeholder="es. 14">
+            </div>
+            <div class="fgroup" style="flex:1">
+                <label class="flabel">Carenza (gg)</label>
+                <input class="finput" id="pCarenza" type="number" placeholder="es. 7">
+            </div>
+        </div>
+        <div class="fgroup">
+            <label class="flabel">Note</label>
+            <input class="finput" id="pNote" type="text" placeholder="es. anti-oidio, fungicida…">
+        </div>
+        <input type="hidden" id="pEditId">
+        <div class="row2">
+            <button class="btn btn-out" onclick="resetProdForm()">Annulla</button>
+            <button class="btn btn-green" onclick="saveProdotto()">💾 Salva</button>
+        </div>
+        <hr>
+        <button class="btn btn-out" onclick="closeModal('mProdotti')">Chiudi</button>
+    </div>
+</div>
 
 <!-- MODAL: SETTINGS / SYNC -->
 <div class="overlay hide" id="mSettings">
@@ -1132,14 +1196,14 @@ function renderProds() {
     }
 
     let h = "";
-    for (const [id, p] of Object.entries(DB)) {
+    for (const [id, p] of Object.entries(getAllProds())) {
         // Filter by category
         if (!cats.some(c => p.cats.includes(c))) continue;
 
         const dose = p.doseL * L;
         const doseStr = Number.isInteger(dose) ? dose : dose.toFixed(1);
         const isOn = selProds.includes(id);
-        const blocked = inFior && (p.blockatoIn || []).includes("fioritura");
+        const blocked = !p.custom && inFior && (p.blockatoIn || []).includes("fioritura");
         const incompat = !isOn && (p.incompWith || []).some(x => selProds.includes(x));
 
         // Suggestion logic
@@ -1401,6 +1465,123 @@ function updateBadge(n) {
 }
 
 // ═══════════════════════════════════════════════
+// PRODOTTI CUSTOM
+// ═══════════════════════════════════════════════
+
+let customProds = [];
+
+function loadCustomProds() {
+    const s = localStorage.getItem("fg2_custom_prods");
+    customProds = s ? JSON.parse(s) : [];
+}
+
+function saveCustomProds() {
+    localStorage.setItem("fg2_custom_prods", JSON.stringify(customProds));
+    localStorage.setItem("fg2_lastUpdated", new Date().toISOString());
+    const { token, gistId } = getGistCfg();
+    if (token && gistId) pushToGist(true);
+}
+
+function openProdotti() {
+    renderCustomProdList();
+    resetProdForm();
+    document.getElementById("mProdotti").classList.remove("hide");
+}
+
+function renderCustomProdList() {
+    const el = document.getElementById("customProdList");
+    if (!customProds.length) {
+        el.innerHTML = `<div style="color:var(--txt2);font-size:13px;margin-bottom:12px">Nessun prodotto personalizzato ancora.</div>`;
+        return;
+    }
+    el.innerHTML = customProds.map(p => `
+        <div style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--bg);border-radius:9px;margin-bottom:7px">
+            <div style="flex:1">
+                <div style="font-weight:800;font-size:14px">${p.nome} <span class="prod-custom-tag">custom</span></div>
+                <div style="font-size:12px;color:var(--txt2)">${p.doseL} ${p.unit}/L
+                    ${p.intervallo ? ` · ogni ${p.intervallo}gg` : ""}
+                    ${p.carenza ? ` · carenza ${p.carenza}gg` : ""}
+                </div>
+            </div>
+            <button class="ico-btn" onclick="editProd('${p.id}')">✏️</button>
+            <button class="ico-btn" onclick="delProd('${p.id}')">🗑️</button>
+        </div>`).join("");
+}
+
+function resetProdForm() {
+    document.getElementById("pNome").value = "";
+    document.getElementById("pDose").value = "";
+    document.getElementById("pUnit").value = "ml";
+    document.getElementById("pIntervallo").value = "";
+    document.getElementById("pCarenza").value = "";
+    document.getElementById("pNote").value = "";
+    document.getElementById("pEditId").value = "";
+    document.getElementById("mProdTitle").textContent = "➕ Nuovo Prodotto";
+}
+
+function editProd(id) {
+    const p = customProds.find(x => x.id === id);
+    if (!p) return;
+    document.getElementById("pNome").value = p.nome;
+    document.getElementById("pDose").value = p.doseL;
+    document.getElementById("pUnit").value = p.unit;
+    document.getElementById("pIntervallo").value = p.intervallo || "";
+    document.getElementById("pCarenza").value = p.carenza || "";
+    document.getElementById("pNote").value = p.note || "";
+    document.getElementById("pEditId").value = id;
+    document.getElementById("mProdTitle").textContent = "✏️ Modifica Prodotto";
+}
+
+function saveProdotto() {
+    const nome = document.getElementById("pNome").value.trim();
+    const doseL = parseFloat(document.getElementById("pDose").value);
+    if (!nome || isNaN(doseL)) { toast("Nome e dose sono obbligatori", "err"); return; }
+
+    const prod = {
+        nome,
+        emoji: "⚗️",
+        doseL,
+        unit:      document.getElementById("pUnit").value,
+        intervallo: parseInt(document.getElementById("pIntervallo").value) || null,
+        carenza:    parseInt(document.getElementById("pCarenza").value)    || null,
+        note:       document.getElementById("pNote").value.trim(),
+        cats:       ["drupacee","pomacee","vigneto","orto"],
+        custom:     true
+    };
+
+    const eid = document.getElementById("pEditId").value;
+    if (eid) {
+        const i = customProds.findIndex(x => x.id === eid);
+        if (i !== -1) customProds[i] = { ...customProds[i], ...prod };
+        toast("Prodotto aggiornato!");
+    } else {
+        prod.id = "c_" + uid();
+        customProds.push(prod);
+        toast("Prodotto aggiunto!");
+    }
+    saveCustomProds();
+    renderCustomProdList();
+    resetProdForm();
+    renderProds();
+}
+
+function delProd(id) {
+    if (!confirm("Eliminare questo prodotto?")) return;
+    customProds = customProds.filter(p => p.id !== id);
+    saveCustomProds();
+    renderCustomProdList();
+    renderProds();
+    toast("Prodotto eliminato", "wrn");
+}
+
+function getAllProds() {
+    // Merge DB fisso + prodotti custom
+    const all = { ...DB };
+    customProds.forEach(p => { all[p.id] = p; });
+    return all;
+}
+
+// ═══════════════════════════════════════════════
 // GITHUB GIST SYNC
 // ═══════════════════════════════════════════════
 
@@ -1525,9 +1706,11 @@ async function pullFromGist(silent = false) {
         const localDate  = new Date(localStorage.getItem("fg2_lastUpdated") || 0);
 
         if (remoteDate > localDate) {
-            plants     = remote.plants     || [];
-            treatments = remote.treatments || [];
+            plants      = remote.plants      || [];
+            treatments  = remote.treatments  || [];
+            customProds = remote.customProds || [];
             save("plants"); save("treats");
+            localStorage.setItem("fg2_custom_prods", JSON.stringify(customProds));
             localStorage.setItem("fg2_lastUpdated", remote.lastUpdated);
             renderPiante(); renderDashboard();
             if (!silent) toast("Dati aggiornati da GitHub!", "ok");
@@ -1553,9 +1736,9 @@ async function manualSync() {
 
 function buildGistPayload() {
     return JSON.stringify({
-        plants, treatments,
+        plants, treatments, customProds,
         lastUpdated: new Date().toISOString(),
-        version: "2"
+        version: "3"
     }, null, 2);
 }
 
@@ -1611,6 +1794,7 @@ if ("serviceWorker" in navigator) {
 // INIT
 // ═══════════════════════════════════════════════
 load();
+loadCustomProds();
 renderPiante();
 renderDashboard();
 setTimeout(() => {
