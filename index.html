@@ -1033,7 +1033,7 @@ function savePlant() {
         plants.push({ id: uid(), nome, cat, fase, note });
         toast("Pianta aggiunta!");
     }
-    save("plants");
+    saveAndSync("plants");
     closeModal("mPlant");
     renderPiante();
 }
@@ -1041,7 +1041,7 @@ function savePlant() {
 function delPlant(id) {
     if (!confirm("Eliminare questa pianta?")) return;
     plants = plants.filter(p => p.id !== id);
-    save("plants");
+    saveAndSync("plants");
     renderPiante();
     toast("Pianta eliminata", "wrn");
 }
@@ -1301,7 +1301,7 @@ function buildNextInfo(t) {
 function delTreat(id) {
     if (!confirm("Eliminare questo trattamento?")) return;
     treatments = treatments.filter(t => t.id !== id);
-    save("treats");
+    saveAndSync("treats");
     renderStorico();
     toast("Trattamento eliminato", "wrn");
 }
@@ -1478,9 +1478,12 @@ async function createGist() {
     setSyncBtn(false);
 }
 
-async function pushToGist() {
+async function pushToGist(silent = false) {
     const { token, gistId } = getGistCfg();
-    if (!token || !gistId) { toast("Configura prima il Gist!", "err"); return; }
+    if (!token || !gistId) {
+        if (!silent) toast("Configura prima il Gist (tasto ⚙️)!", "err");
+        return;
+    }
     setSyncBtn(true);
     try {
         const payload = buildGistPayload();
@@ -1492,16 +1495,20 @@ async function pushToGist() {
         if (!res.ok) throw new Error(res.status);
         localStorage.setItem("fg2_lastSync", new Date().toISOString());
         renderSyncStatus();
-        toast("Dati caricati su GitHub!", "ok");
+        if (!silent) toast("Dati caricati su GitHub!", "ok");
+        else setSyncDot(true);
     } catch(e) {
-        toast("Errore upload: " + e.message, "err");
+        if (!silent) toast("Errore upload: " + e.message, "err");
     }
     setSyncBtn(false);
 }
 
-async function pullFromGist() {
+async function pullFromGist(silent = false) {
     const { token, gistId } = getGistCfg();
-    if (!token || !gistId) { toast("Configura prima il Gist!", "err"); return; }
+    if (!token || !gistId) {
+        if (!silent) toast("Configura prima il Gist (tasto ⚙️)!", "err");
+        return;
+    }
     setSyncBtn(true);
     try {
         const res = await fetch(`https://api.github.com/gists/${gistId}`, {
@@ -1512,15 +1519,26 @@ async function pullFromGist() {
         const content = gist.files["frutteto-data.json"]?.content;
         if (!content) throw new Error("File non trovato nel Gist");
         const remote = JSON.parse(content);
-        plants     = remote.plants     || [];
-        treatments = remote.treatments || [];
-        save("plants"); save("treats");
+
+        // Merge: prendi la versione più recente
+        const remoteDate = new Date(remote.lastUpdated || 0);
+        const localDate  = new Date(localStorage.getItem("fg2_lastUpdated") || 0);
+
+        if (remoteDate > localDate) {
+            plants     = remote.plants     || [];
+            treatments = remote.treatments || [];
+            save("plants"); save("treats");
+            localStorage.setItem("fg2_lastUpdated", remote.lastUpdated);
+            renderPiante(); renderDashboard();
+            if (!silent) toast("Dati aggiornati da GitHub!", "ok");
+            else setSyncDot(true);
+        } else {
+            if (!silent) toast("Dati già aggiornati", "info");
+        }
         localStorage.setItem("fg2_lastSync", new Date().toISOString());
-        renderPiante(); renderDashboard();
         renderSyncStatus();
-        toast("Dati scaricati da GitHub!", "ok");
     } catch(e) {
-        toast("Errore download: " + e.message, "err");
+        if (!silent) toast("Errore download: " + e.message, "err");
     }
     setSyncBtn(false);
 }
@@ -1541,11 +1559,18 @@ function buildGistPayload() {
     }, null, 2);
 }
 
-// Auto-sync on save
+// Auto-sync silenzioso su ogni salvataggio
 function saveAndSync(what) {
     save(what);
+    localStorage.setItem("fg2_lastUpdated", new Date().toISOString());
     const { token, gistId } = getGistCfg();
-    if (token && gistId) pushToGist();
+    if (token && gistId) pushToGist(true); // silent=true
+}
+
+function setSyncDot(ok) {
+    const btn = document.getElementById("syncBtn");
+    if (btn) btn.innerHTML = ok ? "✅" : "☁️";
+    setTimeout(() => { if (btn) btn.innerHTML = "☁️"; }, 2000);
 }
 
 // ═══════════════════════════════════════════════
@@ -1593,7 +1618,9 @@ setTimeout(() => {
     const n = scad.filter(s => s.d < 0 && s.tipo === "treat").length;
     updateBadge(n);
     if (n > 0) toast(`⚠️ ${n} trattamenti scaduti!`, "wrn", 5000);
-}, 400);
+    // Auto-pull silenzioso all'avvio
+    pullFromGist(true);
+}, 800);
 </script>
 </body>
 </html>
